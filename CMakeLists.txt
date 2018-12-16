@@ -17,15 +17,15 @@ set(SOURCE_FILES    src/ddb_delta.c
                     src/ddb_view.c)
 
 
-add_library(libdiscodb SHARED ${SOURCE_FILES})
+add_library(discodb SHARED ${SOURCE_FILES})
 
-TARGET_LINK_LIBRARIES(libdiscodb cmph)
+TARGET_LINK_LIBRARIES(discodb cmph)
 
 
 enable_testing()
 function(ddb_add_test test_name)
     add_executable(${test_name} ${ARGN})
-    target_link_libraries(${test_name} libdiscodb )
+    target_link_libraries(${test_name} discodb )
 endfunction()
 ddb_add_test(createandquery src/tests/create_and_query.c)
 #ddb_add_test(testmerge src/tests/test_merge.c)
