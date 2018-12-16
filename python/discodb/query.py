@@ -38,6 +38,7 @@ True
 [('D', ['F']), ('E | D', ['F', 'G'])]
 """
 from operator import __and__, __or__
+from six.moves import reduce
 
 class Q(object):
     """
@@ -72,8 +73,8 @@ class Q(object):
     def __pos__(self):
         return Q((Clause((MetaLiteral(self), )), ))
 
-    def __cmp__(self, other):
-        return cmp(str(self), str(other))
+    def __lt__(self, other):
+        return str(self) < str(other)
 
     def __eq__(self, other):
         return self.clauses == other.clauses
@@ -116,9 +117,9 @@ class Q(object):
     @classmethod
     def parse(cls, string):
         """
-        Parse a string into a Q object.
+        Parse text into a Q object.
 
-        The parsed string is subject to the following conditions:
+        The parsed text is subject to the following conditions:
 
          - `*` characters will be replaced with `+`
          - literal terms cannot contain the characters `&|~+()`
@@ -127,7 +128,7 @@ class Q(object):
          - parentheses make operator precedence explicit
          - `+` characters introduce a dereferencing operation
 
-        The string will be parsed into a logical combination of the terms,
+        The text will be parsed into a logical combination of the terms,
         which will be stored internally in conjunctive normal form.
 
         Dereferencing is performed when the
@@ -233,7 +234,7 @@ class Literal(object):
     A potential key in a discodb (or its negation).
     """
     def __init__(self, term, negated=False):
-        self.term    = term
+        self.term    = term.encode('utf-8')
         self.negated = negated
 
     def __and__(self, other):

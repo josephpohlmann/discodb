@@ -1,5 +1,7 @@
-import doctest, unittest
+import doctest
+import unittest
 from random import randint
+from six.moves import range
 
 from discodb import DiscoDB, Q
 from discodb import DiscoDBConstructor
@@ -7,7 +9,7 @@ from discodb import query
 from discodb import tools
 
 def k_vs_iter(N, max_values=100):
-    for x in xrange(N):
+    for x in range(N):
         # Force every key to have at least ONE value so that the test in
         # test_query_noresults doesn't erroneously pass. The problem there is
         # that queries that should return no results were returning the very
@@ -15,7 +17,7 @@ def k_vs_iter(N, max_values=100):
         # could pass but we wouldn't know if it passed because the query truly
         # returned no results (as it should) or if it actually returned the
         # first key's value, which was also empty.
-        yield '%s' % x, ('%s' % v for v in xrange(randint(1, max_values)))
+        yield '%s' % x, ('%s' % v for v in range(randint(1, max_values)))
 
 class TestConstructor(unittest.TestCase):
     def test_null_constructor(self):
@@ -68,7 +70,7 @@ class TestMappingProtocol(unittest.TestCase):
         self.assertEquals(self.discodb.get('X', 'Y'), 'Y')
 
     def test_getitem(self):
-        for x in xrange(self.numkeys):
+        for x in range(self.numkeys):
             try:
                 list(self.discodb[str(x)])
             except KeyError:

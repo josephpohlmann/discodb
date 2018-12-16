@@ -30,7 +30,7 @@ def test(db):
     for v, s in samples(db):
         if list(db.query('a', view=v)) != [x for x in db['a'] if x in s]:
             raise Exception("no match: %d" % i)
-    print "all ok!"
+    print("all ok!")
 
 def bmark(db):
     for i, (v, s) in enumerate(samples(db)):
@@ -44,11 +44,10 @@ def bmark(db):
 
 db = DiscoDB(items())
 test(db)
-print "tests pass"
+print("tests pass")
 rows = list(bmark(db))
 f = open('bmark.csv', 'w')
 csv = DictWriter(f, sorted(rows[0].keys(), reverse=True))
 csv.writeheader()
 csv.writerows(rows)
 f.close()
-

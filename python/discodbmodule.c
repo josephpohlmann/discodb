@@ -1,13 +1,14 @@
 #define PY_SSIZE_T_CLEAN
+#include <Python.h>
 
-#if PY_VERSION_HEX < 0x02060000
-#define PyVarObject_HEAD_INIT(type, size) PyObject_HEAD_INIT(type) size,
+#ifndef Py_TYPE
 #define Py_TYPE(ob)   (((PyObject*)(ob))->ob_type)
-#define PyBytes_AsString PyString_AsString
-#define PyBytes_FromFormat PyString_FromFormat
 #endif
 
-#include <Python.h>
+#if PY_MAJOR_VERSION < 3
+#define PyBytes_AsString PyString_AsString
+#endif
+
 #include "structmember.h"
 
 #include "discodb.h"
@@ -127,7 +128,11 @@ DiscoDB_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         *items = NULL,
         *iteritems = NULL,
         *none = NULL,
+#if PY_MAJOR_VERSION >= 3
+        *typedict = Py_BuildValue("{y:O}", "ddb_type", type);
+#else
         *typedict = Py_BuildValue("{s:O}", "ddb_type", type);
+#endif
 
     if (typedict == NULL || emptytuple == NULL)
       goto Done;
@@ -393,7 +398,11 @@ DiscoDB_dumps(DiscoDB *self)
 {
     uint64_t length;
     char *cbuffer = ddb_dumps(self->discodb, &length);
+#if PY_MAJOR_VERISION >= 3
+    PyObject *string = Py_BuildValue("y#", cbuffer, length);
+#else
     PyObject *string = Py_BuildValue("s#", cbuffer, length);
+#endif
     free(cbuffer);
     return string;
 }
@@ -433,7 +442,11 @@ DiscoDB_loads(PyTypeObject *type, PyObject *bytes)
     Py_ssize_t n;
 
     if (self != NULL) {
+#if PY_MAJOR_VERSION >= 3
+        if (PyBytes_AsStringAndSize(bytes, (char**)&buffer, &n))
+#else
         if (PyString_AsStringAndSize(bytes, (char**)&buffer, &n))
+#endif
             goto Done;
 
         Py_INCREF(bytes);
@@ -503,31 +516,56 @@ DiscoDB_load(PyTypeObject *type, PyObject *args)
 
 /* Module Initialization */
 
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+    PyModuleDef_HEAD_INIT,
+    "_discodb",             /* m_name */
+    NULL,                   /* m_doc */
+    -1,                     /* m_size */
+    discodb_methods,        /* m_methods */
+    NULL,                   /* m_reload */
+    NULL,                   /* m_traverse */
+    NULL,                   /* m_clear */
+    NULL,                   /* m_free */
+};
+#define MOD_ERROR_VAL NULL
+#else
+#define MOD_ERROR_VAL
+#endif
+
 PyMODINIT_FUNC
+#if PY_MAJOR_VERSION >= 3
+PyInit__discodb(void)
+#else
 init_discodb(void)
+#endif
 {
+#if PY_MAJOR_VERSION >= 3
+    PyObject *module = PyModule_Create(&moduledef);
+#else
     PyObject *module = Py_InitModule("_discodb", discodb_methods);
+#endif
 
     if (PyType_Ready(&DiscoDBType) < 0)
-        return;
+        return MOD_ERROR_VAL;
     Py_INCREF(&DiscoDBType);
     PyModule_AddObject(module, "_DiscoDB",
                        (PyObject *)&DiscoDBType);
 
     if (PyType_Ready(&DiscoDBConstructorType) < 0)
-      return;
+      return MOD_ERROR_VAL;
     Py_INCREF(&DiscoDBConstructorType);
     PyModule_AddObject(module, "DiscoDBConstructor",
                        (PyObject *)&DiscoDBConstructorType);
 
     if (PyType_Ready(&DiscoDBIterType) < 0)
-      return;
+      return MOD_ERROR_VAL;
     Py_INCREF(&DiscoDBIterType);
     PyModule_AddObject(module, "DiscoDBIter",
                        (PyObject *)&DiscoDBIterType);
 
     if (PyType_Ready(&DiscoDBViewType) < 0)
-      return;
+      return MOD_ERROR_VAL;
     Py_INCREF(&DiscoDBViewType);
     PyModule_AddObject(module, "DiscoDBView",
                        (PyObject *)&DiscoDBViewType);
@@ -535,6 +573,9 @@ init_discodb(void)
     DiscoDBError = PyErr_NewException("discodb.DiscoDBError", NULL, NULL);
     Py_INCREF(DiscoDBError);
     PyModule_AddObject(module, "DiscoDBError", DiscoDBError);
+#if PY_MAJOR_VERSION >= 3
+    return module;
+#endif
 }
 
 
@@ -544,10 +585,6 @@ init_discodb(void)
 static PyMethodDef DiscoDBConstructor_methods[] = {
     {"add", (PyCFunction)DiscoDBConstructor_add, METH_VARARGS,
      "c.add(k, v) -> add (k, v) to the DiscoDB that will be produced."},
-    {"merge", (PyCFunction)DiscoDBConstructor_merge, METH_VARARGS,
-     "c.merge(ddb) -> merge (ddb) keys and values into the DiscoDB ."},
-    {"merge_with_explicit_value", (PyCFunction)DiscoDBConstructor_merge_with_explicit_value, METH_VARARGS,
-     "c.merge_with_explicit_value(ddb, value_str) -> merge (ddb) keys and replaces value with named value_str into the DiscoDB ."},
     {"finalize", (PyCFunction)DiscoDBConstructor_finalize, METH_KEYWORDS,
      "c.finalize([flags]) -> a DiscoDB containing the mappings added to c."},
     {NULL}                                    /* Sentinel          */
@@ -604,15 +641,21 @@ static PyObject *
 DiscoDBConstructor_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     DiscoDBConstructor *self = (DiscoDBConstructor *)type->tp_alloc(type, 0);
+    DiscoDB *ddb = NULL;
     PyTypeObject *ddb_type = &DiscoDBType;
 
-    static char *kwlist[] = {"ddb_type", NULL};
+    static char *kwlist[] = {"ddb", "ddb_type", NULL};
 
     if (self == NULL)
       goto Done;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &ddb_type))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OO", kwlist, &ddb, &ddb_type))
       goto Done;
+
+    if (ddb && !PyObject_TypeCheck(ddb, &DiscoDBType)) {
+      PyErr_SetString(DiscoDBError, "Not a discodb.");
+      goto Done;
+    }
 
     if (!PyType_Check(ddb_type) || !PyType_IsSubtype(ddb_type, &DiscoDBType)) {
       PyErr_SetString(DiscoDBError, "Not a valid type.");
@@ -621,7 +664,11 @@ DiscoDBConstructor_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     Py_INCREF(self->ddb_type = ddb_type);
 
-    self->ddb_cons = ddb_cons_alloc();
+    if (ddb)
+      self->ddb_cons = ddb_cons_ddb(ddb->discodb);
+    else
+      self->ddb_cons = ddb_cons_alloc();
+
     if (self->ddb_cons == NULL)
       goto Done;
 
@@ -641,24 +688,7 @@ DiscoDBConstructor_dealloc(DiscoDBConstructor *self)
     ddb_cons_dealloc(self->ddb_cons);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
-static PyObject *
-DiscoDBConstructor_merge(DiscoDBConstructor *self, PyObject *item)
-{
-    PyObject *data = NULL;
-    DiscoDB *ddb = NULL;
-    if (PyArg_ParseTuple(item, "O!O", &DiscoDBType, &ddb, &data))
-        ddb_cons_merge(self->ddb_cons, ddb->discodb, NULL);
-    Py_RETURN_NONE;
-}
-static PyObject *
-DiscoDBConstructor_merge_with_explicit_value(DiscoDBConstructor *self, PyObject *item)
-{
-    DiscoDB *ddb = NULL;
-    struct ddb_entry explicit_ventry;
-    if (PyArg_ParseTuple(item, "O!s#", &DiscoDBType, &ddb, &explicit_ventry.data, &explicit_ventry.length))
-        ddb_cons_merge(self->ddb_cons, ddb->discodb, &explicit_ventry);
-    Py_RETURN_NONE;
-}
+
 static PyObject *
 DiscoDBConstructor_add(DiscoDBConstructor *self, PyObject *item)
 {
@@ -670,7 +700,11 @@ DiscoDBConstructor_add(DiscoDBConstructor *self, PyObject *item)
     uint64_t n;
     struct ddb_entry kentry, ventry;
 
+#if PY_MAJOR_VERSION >= 3
+    if (!PyArg_ParseTuple(item, "y#O", &kentry.data, &kentry.length, &values))
+#else
     if (!PyArg_ParseTuple(item, "s#O", &kentry.data, &kentry.length, &values))
+#endif
       goto Done;
 
     Py_XINCREF(values);
@@ -678,7 +712,11 @@ DiscoDBConstructor_add(DiscoDBConstructor *self, PyObject *item)
     if (values == NULL)
       values = PyTuple_New(0);
 
+#if PY_MAJOR_VERSION >= 3
+    if (PyBytes_Check(values))
+#else
     if (PyString_Check(values))
+#endif
       valueseq = Py_BuildValue("(O)", values);
     else
       Py_XINCREF(valueseq = values);
@@ -838,13 +876,21 @@ DiscoDBIter_count(DiscoDBIter *self)
     Py_ssize_t n = ddb_cursor_count(self->cursor, &errcode);
     if (errcode)
         return PyErr_NoMemory();
+#if PY_MAJOR_VERSION >= 3
+    return PyLong_FromSsize_t(n);
+#else
     return PyInt_FromSsize_t(n);
+#endif
 }
 
 static PyObject *
 DiscoDBIter_size(DiscoDBIter *self)
 {
+#if PY_MAJOR_VERSION >= 3
+    return PyLong_FromSsize_t(ddb_resultset_size(self->cursor));
+#else
     return PyInt_FromSsize_t(ddb_resultset_size(self->cursor));
+#endif
 }
 
 static PyObject *
@@ -859,7 +905,12 @@ DiscoDBIter_iternext(DiscoDBIter *self)
     if (next == NULL)
         return NULL;
 
+#if PY_MAJOR_VERSION >= 3
+    return Py_BuildValue("y#", next->data, next->length);
+#else
     return Py_BuildValue("s#", next->data, next->length);
+#endif
+
 }
 
 /* DiscoDB View Type */
@@ -1050,7 +1101,11 @@ static int
 ddb_string_to_entry(PyObject *str, struct ddb_entry *e)
 {
     Py_ssize_t len = 0;
+#if PY_MAJOR_VERSION >= 3
+    if (PyBytes_AsStringAndSize(str, (char**)&e->data, &len))
+#else
     if (PyString_AsStringAndSize(str, (char**)&e->data, &len))
+#endif
         return 1;
     if (len < UINT32_MAX){
         e->length = len;

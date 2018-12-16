@@ -1,3 +1,4 @@
+import six
 from ._discodb import _DiscoDB, DiscoDBConstructor, DiscoDBError, DiscoDBIter, DiscoDBView
 from .query import Q
 from .tools import kvgroup
@@ -62,7 +63,9 @@ class DiscoDB(_DiscoDB):
         return DiscoDBInquiry(lambda: super(DiscoDB, self).__getitem__(key))
 
     def get(self, key, default=None):
-        """self[key] if key in self, else default."""
+        """self[key] if key in self, else default.
+        keys are bytes.
+        """
         if key in self:
             return self[key]
         return default
@@ -89,7 +92,7 @@ class DiscoDB(_DiscoDB):
 
         See :mod:`discodb.query` for more information.
         """
-        if isinstance(query, basestring):
+        if isinstance(query, six.string_types):
             query = Q.parse(query)
         return DiscoDBItemInquiry(lambda: query.metaquery(self))
 
@@ -97,12 +100,12 @@ class DiscoDB(_DiscoDB):
         """
         an inquiry over the values of self whose keys satisfy the query.
 
-        The query can be either a :class:`Q` object, or a string.
-        If a string, it is transformed into a :class:`Q` via :meth:`Q.parse`.
+        The query can be either a :class:`Q` object, or text.
+        If text, it is transformed into a :class:`Q` via :meth:`Q.parse`.
         """
-        if isinstance(query, basestring):
+        if isinstance(query, six.string_types):
             query = Q.parse(query)
-        if view == None:
+        if view is None:
             l = lambda: super(DiscoDB, self).query(query)
         else:
             if not isinstance(view, DiscoDBView):
