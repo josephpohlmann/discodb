@@ -596,7 +596,7 @@ static PyMethodDef DiscoDBConstructor_methods[] = {
      "c.merge(ddb) -> merge (ddb) keys and values into the DiscoDB ."},
     {"merge_with_explicit_value", (PyCFunction)DiscoDBConstructor_merge_with_explicit_value, METH_VARARGS,
      "c.merge_with_explicit_value(ddb, value_str) -> merge (ddb) keys and replaces value with named value_str into the DiscoDB ."},
-    {"finalize", (PyCFunction)DiscoDBConstructor_finalize, METH_KEYWORDS,
+    {"finalize", (PyCFunction)DiscoDBConstructor_finalize, METH_VARARGS | METH_KEYWORDS,
      "c.finalize([flags]) -> a DiscoDB containing the mappings added to c."},
     {NULL}                                    /* Sentinel          */
 };
