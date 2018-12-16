@@ -21,6 +21,7 @@ add_library(discodb SHARED ${SOURCE_FILES})
 
 TARGET_LINK_LIBRARIES(discodb cmph)
 
+#gcc -Wall -O2  -shared -o libdiscodb.so -fPIC  *.c -lcmph
 
 enable_testing()
 function(ddb_add_test test_name)
