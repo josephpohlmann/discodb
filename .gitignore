@@ -4,6 +4,7 @@
 *.so
 *.pyc
 build
+*dist/*
 doc/.build
 create
 query
