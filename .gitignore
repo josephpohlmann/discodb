@@ -1,5 +1,7 @@
 *.dSYM
 *.o
+*.a
+*.so
 *.pyc
 build
 doc/.build
