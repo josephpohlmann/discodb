@@ -23,8 +23,8 @@ script:
   - ls -alh
   - ./test-create-and-query.o output.ddb src/tests/input.txt
   - ls -alh
-  - install libdiscodb.so /usr/lib64/libdiscodb.so
-  - install src/*.h /usr/include/.
+  - sudo install libdiscodb.so /usr/lib/libdiscodb.so
+  - sudo install src/*.h /usr/include/.
   - cd python
   - python3 setup.py bdist_wheel
   - find . -name "*.so" | xargs -P1 -n1 ldd
