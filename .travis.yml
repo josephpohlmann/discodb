@@ -31,6 +31,8 @@ script:
   - find . -name "*.so" | xargs -P1 -n1 ldd
   - pip3 install dist/discodb*.whl
   - python3 util/test_merge.py
-
+  - python3 util/test.py
+  - python3 util/perf.py
+  - python3 util/benchmark-views.py
 
 
