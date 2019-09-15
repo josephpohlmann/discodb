@@ -182,8 +182,9 @@ int main(int argc, char **argv)
     e.length = strlen(e.data);
     print_cursor(odb, ddb_getitem(odb, &e), &e);
 
-
-
+    struct ddb_cons *db_to_merge = ddb_cons_new();
+    ddb_cons_merge(db_to_merge, odb, NULL);
+    ddb_cons_free(db_to_merge);
     ddb_free(odb);
 
     return 0;

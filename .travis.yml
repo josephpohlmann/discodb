@@ -1,0 +1,39 @@
+sudo: required
+
+language: python
+
+cache: pip
+
+python:
+  - "3.6"
+
+env:
+  global:
+    - CC_TEST_REPORTER_ID=edcf89b102b70b78638e9217f0ee4b66dbcc01dd90527259774c374fa545e313
+
+branches:
+  only:
+    - py3
+    - ctest
+
+# command to install dependencies
+before_install:
+  - if [ "$TRAVIS_BRANCH" == "py3" ];
+    then echo "TODO Build Wheel"
+    else echo "only building wheel on py3"; fi
+
+install:
+  - sudo apt-get install cmake cmph cmph-dev gcc make
+
+
+script:
+  - cmake .
+  - make
+  - ls -alh
+  - test-create-and-query.o output.ddb src/tests/input.txt
+  - ls -alh
+
+after_success:
+  - echo "built"
+
+
