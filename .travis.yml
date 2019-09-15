@@ -23,7 +23,7 @@ before_install:
     else echo "only building wheel on py3"; fi
 
 install:
-  - sudo apt-get install cmake cmph cmph-dev gcc make
+  - sudo apt-get install libcmph0 libcmph-dev
 
 
 script:
