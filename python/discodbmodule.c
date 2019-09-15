@@ -694,9 +694,8 @@ DiscoDBConstructor_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 static PyObject *
 DiscoDBConstructor_merge(DiscoDBConstructor *self, PyObject *item)
 {
-    PyObject *data = NULL;
     DiscoDB *ddb = NULL;
-    if (PyArg_ParseTuple(item, "O!O", &DiscoDBType, &ddb, &data))
+    if (PyArg_ParseTuple(item, "O!", &DiscoDBType, &ddb))
         ddb_cons_merge(self->ddb_cons, ddb->discodb, NULL);
     Py_RETURN_NONE;
 }

@@ -1,5 +1,5 @@
 __author__ = 'dan'
-BIG_VAL = 20000
+BIG_VAL = 2000
 import discodb
 from time import sleep
 a = discodb.DiscoDBConstructor()
@@ -20,8 +20,8 @@ with open("/tmp/qfd1", 'rb') as f:
     b = discodb.DiscoDB.load(f)
 
 print("DB1 Keys and Values read from disk")
-print([k for k in b.keys()])
-print([v for v in b.values()])
+first_keys = [k for k in b.keys()]
+first_values = [v for v in b.values()]
 type(b)
 
 c = discodb.DiscoDBConstructor()
@@ -33,12 +33,16 @@ for x in range(BIG_VAL):
     c.add(b"special", str(x).encode())
 
 
-c.merge(b, False)
+c.merge(b)
 oo = c.finalize(unique_items=True)
 
 print("DB2 Keys and Values")
-print([k for k in oo.keys()])
-print([v for v in oo.values()])
+second_keys = [k for k in oo.keys()]
+second_values = [v for v in oo.values()]
+
+assert set(first_keys).issubset( second_keys )
+assert set(first_values).issubset( second_values )
+
 with open("/tmp/qfd2", 'wb') as f:
     oo.dump(f)
 
@@ -53,7 +57,10 @@ d.merge_with_explicit_value(e, b"new_value_for_all_keys") #one of these must be 
 oo2 = d.finalize(unique_items=True)
 print ("testing the final merge")
 print ("values before reload ")
-[v for v in oo2.values()]
+third_keys = [v for v in oo2.keys()]
+third_values = [v for v in oo2.values()]
+assert set(third_keys) == set(second_keys)
+assert set(third_values) == set([b"new_value_for_all_keys"])
 
 with open("/tmp/qfdfinal", 'wb') as f:
     oo2.dump(f)
