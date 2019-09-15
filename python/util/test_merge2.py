@@ -47,8 +47,8 @@ with open("/tmp/qfd2", 'rb') as f:
     e = discodb.DiscoDB.load(f)
 
 
-d.merge_with_explicit_value(e, b"new_value_for_all_keys") #one of these must be commented
-#d.merge(e, False) #one of these must be commented
+#d.merge_with_explicit_value(e, b"new_value_for_all_keys") #one of these must be commented
+d.merge(e, False) #one of these must be commented
 
 oo2 = d.finalize(unique_items=True)
 print ("testing the final merge")
