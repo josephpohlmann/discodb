@@ -7,9 +7,6 @@ cache: pip
 python:
   - "3.6"
 
-env:
-  global:
-    - CC_TEST_REPORTER_ID=edcf89b102b70b78638e9217f0ee4b66dbcc01dd90527259774c374fa545e313
 
 branches:
   only:
@@ -30,7 +27,7 @@ script:
   - cmake .
   - make
   - ls -alh
-  - test-create-and-query.o output.ddb src/tests/input.txt
+  - ./test-create-and-query.o output.ddb src/tests/input.txt
   - ls -alh
 
 after_success:
