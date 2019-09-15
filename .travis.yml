@@ -7,17 +7,15 @@ cache: pip
 python:
   - "3.6"
 
+stages:
+  - clibrary
+  - pybuild
+
 
 branches:
   only:
     - py3
     - ctest
-
-# command to install dependencies
-before_install:
-  - if [ "$TRAVIS_BRANCH" == "py3" ];
-    then echo "TODO Build Wheel"
-    else echo "only building wheel on py3"; fi
 
 install:
   - sudo apt-get install libcmph0 libcmph-dev
@@ -29,8 +27,9 @@ script:
   - ls -alh
   - ./test-create-and-query.o output.ddb src/tests/input.txt
   - ls -alh
+  - cd python
+  - python3 setup.py bdist_wheel
+  - find . -name "*.so" | xargs -P1 -n1 ldd
 
-after_success:
-  - echo "built"
 
 
