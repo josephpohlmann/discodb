@@ -40,8 +40,8 @@ print("DB2 Keys and Values")
 second_keys = [k for k in oo.keys()]
 second_values = [v for v in oo.values()]
 
-assert first_keys == second_keys
-assert first_values == second_values
+assert set(first_keys).issubset( second_keys )
+assert set(first_values).issubset( second_values )
 
 with open("/tmp/qfd2", 'wb') as f:
     oo.dump(f)
