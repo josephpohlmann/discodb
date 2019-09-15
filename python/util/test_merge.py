@@ -57,7 +57,10 @@ d.merge_with_explicit_value(e, b"new_value_for_all_keys") #one of these must be 
 oo2 = d.finalize(unique_items=True)
 print ("testing the final merge")
 print ("values before reload ")
-[v for v in oo2.values()]
+third_keys = [v for v in oo2.keys()]
+third_values = [v for v in oo2.values()]
+assert set(third_keys) == set(second_keys)
+assert set(third_values) == set([b"new_value_for_all_keys"])
 
 with open("/tmp/qfdfinal", 'wb') as f:
     oo2.dump(f)
