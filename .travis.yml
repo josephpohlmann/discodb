@@ -20,16 +20,20 @@ branches:
 install:
   - sudo apt-get install libcmph0 libcmph-dev
 
-
-script:
-  - cmake .
-  - make
-  - ls -alh
-  - ./test-create-and-query.o output.ddb src/tests/input.txt
-  - ls -alh
-  - cd python
-  - python3 setup.py bdist_wheel
-  - find . -name "*.so" | xargs -P1 -n1 ldd
+jobs:
+  include:
+    - stage: clibrary
+      script:
+      - cmake .
+      - make
+      - ls -alh
+      - ./test-create-and-query.o output.ddb src/tests/input.txt
+      - ls -alh
+    - stage: pybuild
+      script:
+      - cd python
+      - python3 setup.py bdist_wheel
+      - find . -name "*.so" | xargs -P1 -n1 ldd
 
 
 
