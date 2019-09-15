@@ -20,8 +20,8 @@ with open("/tmp/qfd1", 'rb') as f:
     b = discodb.DiscoDB.load(f)
 
 print("DB1 Keys and Values read from disk")
-print([k for k in b.keys()])
-print([v for v in b.values()])
+first_keys = [k for k in b.keys()]
+first_values = [v for v in b.values()]
 type(b)
 
 c = discodb.DiscoDBConstructor()
@@ -33,12 +33,16 @@ for x in range(BIG_VAL):
     c.add(b"special", str(x).encode())
 
 
-c.merge(b, False)
+c.merge(b)
 oo = c.finalize(unique_items=True)
 
 print("DB2 Keys and Values")
-print([k for k in oo.keys()])
-print([v for v in oo.values()])
+second_keys = [k for k in oo.keys()]
+second_values = [v for v in oo.values()]
+
+assert first_keys == second_keys
+assert first_values == second_values
+
 with open("/tmp/qfd2", 'wb') as f:
     oo.dump(f)
 
