@@ -32,7 +32,7 @@ jobs:
     - stage: pybuild
       script:
       - cd python
-      - python3 setup.py bdist_wheel
+      - python3 setup.py bdist_wheel --global-option="-I ../src/"
       - find . -name "*.so" | xargs -P1 -n1 ldd
 
 
