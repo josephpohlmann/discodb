@@ -8,3 +8,7 @@ build
 doc/.build
 create
 query
+Makefile
+cmake_install.cmake
+CmakeCache.txt
+libdiscodb.*
