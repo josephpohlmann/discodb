@@ -1,0 +1,10 @@
+key value
+mammals cow
+mammals dog
+mammals cat
+mammals whale
+pets dog
+pets cat
+pets goldfish
+aquatic goldfish
+aquatic whale

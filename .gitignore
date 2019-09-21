@@ -1,3 +1,4 @@
+*.ddb
 *.dSYM
 *.o
 *.a
@@ -12,3 +13,4 @@ Makefile
 cmake_install.cmake
 CmakeCache.txt
 libdiscodb.*
+*.whl

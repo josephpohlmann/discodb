@@ -86,6 +86,14 @@ class Q(object):
         format = '(%s)' if len(self.clauses) > 1 else '%s'
         return ' & '.join(format % c for c in self.clauses)
 
+    def deploy(self):
+        result = {
+            "num_clauses": 0,
+            "clauses": [x.deploy() for x in self.clauses]
+        }
+        result['num_clauses'] = len(result['clauses'])
+        return result
+
     def expand(self, discodb):
         from itertools import product
         for combo in product(*(c.expand(discodb) for c in self.clauses)):
@@ -221,6 +229,14 @@ class Clause(object):
     def __str__(self):
         return ' | '.join('%s' % l for l in self.literals)
 
+    def deploy(self):
+        result = {
+            "num_terms": 0,
+            "terms": [x.deploy() for x in self.literals]
+        }
+        result['num_terms'] = len(result['terms'])
+        return result
+
     def expand(self, discodb):
         from itertools import product
         for combo in product(*(l.expand(discodb) for l in self.literals)):
@@ -234,7 +250,7 @@ class Literal(object):
     A potential key in a discodb (or its negation).
     """
     def __init__(self, term, negated=False):
-        self.term    = term.encode('utf-8')
+        self.term    = term.encode('utf-8') if isinstance(term, str) else term
         self.negated = negated
 
     def __and__(self, other):
@@ -262,7 +278,11 @@ class Literal(object):
         return hash(self.term) ^ hash(self.negated)
 
     def __str__(self):
-        return '%s%s' % ('~' if self.negated else '', self.term)
+        return '%s%s' % ('~' if self.negated else '', self.term.decode())
+
+    def deploy(self):
+        return {"entry": self.term.decode(),
+                "nnot": self.negated}
 
     def expand(self, discodb):
         yield Q.wrap(self)
@@ -272,7 +292,7 @@ class Literal(object):
 
 class MetaLiteral(Literal):
     def __str__(self):
-        return '%s+(%s)' % ('~' if self.negated else '', self.term)
+        return '%s+(%s)' % ('~' if self.negated else '', self.term.decode())
 
     def expand(self, discodb):
         for q in self.term.expand(discodb):
