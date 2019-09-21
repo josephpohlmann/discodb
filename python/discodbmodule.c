@@ -1110,7 +1110,7 @@ ddb_cursor_dealloc(struct ddb_cursor *cursor)
 static void
 ddb_query_clause_dealloc(struct ddb_query_clause *clauses, uint32_t num_clauses)
 {
-    int i;
+    uint32_t i;
     for (i = 0; i < num_clauses; i++)
         if (clauses[i].terms)
             free(clauses[i].terms);
