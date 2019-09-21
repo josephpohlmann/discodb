@@ -18,7 +18,7 @@ script:
   - ls -alh
   - ./test-create-and-query.o output.ddb src/tests/input.txt
   - python3 src/tests/create_large_random_key_value_file.py src/tests/big.txt 90000
-  - cat src/tests/input.txt src/tests/big.txt src/tests/combined.txt
+  - cat src/tests/input.txt src/tests/big.txt > src/tests/combined.txt
   - ./test-create-and-query.o combined.ddb src/tests/combined.txt
   - ls -alh
   - sudo install libdiscodb.so /usr/lib/libdiscodb.so
