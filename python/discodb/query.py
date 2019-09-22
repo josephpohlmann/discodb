@@ -39,6 +39,8 @@ True
 """
 from operator import __and__, __or__
 from six.moves import reduce
+from collections import OrderedDict
+
 
 class Q(object):
     """
@@ -87,10 +89,9 @@ class Q(object):
         return ' & '.join(format % c for c in self.clauses)
 
     def deploy(self):
-        result = {
-            "num_clauses": 0,
-            "clauses": [x.deploy() for x in self.clauses]
-        }
+        result = OrderedDict()
+        result["num_clauses"] = 0
+        result["clauses"] = [x.deploy() for x in self.clauses]
         result['num_clauses'] = len(result['clauses'])
         return result
 
@@ -230,10 +231,9 @@ class Clause(object):
         return ' | '.join('%s' % l for l in self.literals)
 
     def deploy(self):
-        result = {
-            "num_terms": 0,
-            "terms": [x.deploy() for x in self.literals]
-        }
+        result = OrderedDict()
+        result["num_terms"] = 0
+        result["terms"] = [x.deploy() for x in self.literals]
         result['num_terms'] = len(result['terms'])
         return result
 
