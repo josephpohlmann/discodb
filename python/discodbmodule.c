@@ -138,7 +138,7 @@ DiscoDB_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         *iteritems = NULL,
         *none = NULL,
 #if PY_MAJOR_VERSION >= 3
-        *typedict = Py_BuildValue("{y:O}", "ddb_type", type);
+        *typedict = Py_BuildValue("{s:O}", "ddb_type", type);
 #else
         *typedict = Py_BuildValue("{s:O}", "ddb_type", type);
 #endif

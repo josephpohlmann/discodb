@@ -15,7 +15,7 @@ discodb_module = Extension(
 )
 
 setup(name='discodb',
-      version='0.9',
+      version='0.9.1',
       description='An efficient, immutable, persistent mapping object.',
       author='Nokia Research Center',
       install_requires=[
