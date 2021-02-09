@@ -49,20 +49,26 @@ indexing system, `discodex`_.
 Install
 -------
 
-DiscoDB does not depend on Disco in any way, although it is a core
-component in `discodex`_. You can use it without Disco as a general-purpose
-scalable, immutable datastructure for Python. To install only DiscoDB without
-rest of Disco, clone Disco, and run::
+.. code-block:: bash
 
-    make install-discodb
+    mkdir cmake-release && cd cmake-release;
+    cmake -DCMAKE_BUILD_TYPE=Release ..;
+    make;
+    make test;
+    sudo install libdiscodb.so /usr/lib/libdiscodb.so ;
+    sudo install ../src/*.h /usr/include/. ;
 
-or if you just want to build it locally::
+to install the python wrapper
 
-    cd contrib/discodb
+.. code-block:: bash
+
+    cd python
     python setup.py build
 
+
 DiscoDB requires `CMPH library v0.9 or newer
-<http://cmph.sourceforge.net/>`_ (``libcmph-dev`` in Debian).
+<http://cmph.sourceforge.net/>`_ (``libcmph-dev`` in Debian) (``cmph-dev`` for headers and ``libcmph0`` for libs on ubuntu) (``cmph-dev`` for headers ``libcmph`` for libs on alpine).
+
 
 Example
 -------
@@ -71,17 +77,17 @@ Here is a simple example that builds a simple discodb and queries it::
 
     from discodb import DiscoDB, Q
 
-    data = {'mammals': ['cow', 'dog', 'cat', 'whale'],
-            'pets': ['dog', 'cat', 'goldfish'],
-            'aquatic': ['goldfish', 'whale']}
+    data = {b'mammals': [b'cow', b'dog', b'cat', b'whale'],
+            b'pets': [b'dog', b'cat', b'goldfish'],
+            b'aquatic': [b'goldfish', b'whale']}
 
     db = DiscoDB(data) # create an immutable discodb object
 
-    print list(db.keys()) # => mammals, aquatic, pets
-    print list(db['pets']) # => dog, cat, goldfish
-    print list(db.query(Q.parse('mammals & aquatic'))) # => whale
-    print list(db.query(Q.parse('pets & ~aquatic'))) # => dog, cat
-    print list(db.query(Q.parse('pets | aquatic'))) # => dog, cat, whale, goldfish
+    print(list(db.keys())) # => mammals, aquatic, pets
+    print(list(db[b'pets'])) # => dog, cat, goldfish
+    print(list(db.query(Q.parse('mammals & aquatic')))) # => whale
+    print(list(db.query(Q.parse('pets & ~aquatic')))) # => dog, cat
+    print(list(db.query(Q.parse('pets | aquatic')))) # => dog, cat, whale, goldfish
 
     db.dump(file('animals.db', 'w')) # dump discodb to a file
 
@@ -146,11 +152,13 @@ See Also
    :caption: Contents:
 
    index
-   structure
    pythonapi
+   capi
+   luaapi
    cnf
    query
-   capi
+   structure
+
 
 
 .. _conjunctive normal form: http://en.wikipedia.org/wiki/Conjunctive_normal_form
