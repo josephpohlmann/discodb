@@ -8,8 +8,6 @@ By default the python API links against libdiscodb at runtime and provides a thi
 
 
 
-Examples
-========
 
 incrementally adding key/value pairs to a constructor
 -----------------------------------------------------
