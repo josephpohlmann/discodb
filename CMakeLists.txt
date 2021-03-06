@@ -7,6 +7,29 @@ project(libdiscodb)
 #                   undefined uses the less restrictive implementation
 # add_definitions(-DLGPL_IS_OK)
 
+
+##  SECTION 1 -- COMPILE Checks
+INCLUDE(CheckIncludeFiles)
+INCLUDE (CheckLibraryExists)
+
+option(lgpl-is-ok "use SuperFastHash rather than CityHash" OFF)
+
+
+CHECK_INCLUDE_FILES(cmph.h HAVE_CMPH_H)
+if(NOT HAVE_CMPH_H)
+    message(SEND_ERROR "CMPH header is required, stopping")
+    return()
+endif()
+CHECK_LIBRARY_EXISTS(cmph cmph_config_new "" HAVE_CMPH_LIB)
+if(NOT HAVE_CMPH_LIB)
+    message(SEND_ERROR "cmph library is required, stopping")
+    return()
+endif()
+if(lgpl-is-ok)
+    message("-- requested SuperFastHash with -D lgpl-is-ok, will build with SuperFastHash rather than CityHash")
+    add_definitions(-DLGPL_IS_OK)
+endif()
+
 INCLUDE_DIRECTORIES(/usr/include/  src/ )
 LINK_DIRECTORIES(/usr/lib64/)
 set(SOURCE_FILES    src/ddb_delta.c
@@ -21,6 +44,22 @@ set(SOURCE_FILES    src/ddb_delta.c
                     src/ddb_list.c
                     src/ddb_map.c
                     src/ddb_view.c)
+
+set(HEADER_FILES    src/ddb_bits.h
+        src/ddb_cmph.h
+        src/ddb_delta.h
+        src/ddb_deltalist.h
+        src/ddb_hash.h
+        src/ddb_huffman.h
+        src/ddb_internal.h
+        src/ddb_list.h
+        src/ddb_map.h
+        src/ddb_membuffer.h
+        src/ddb_profile.h
+        src/ddb_queue.h
+        src/ddb_types.h
+        src/discodb.h
+        )
 
 
 add_library(discodb SHARED ${SOURCE_FILES})
@@ -42,6 +81,13 @@ target_link_libraries(ddb_merge discodb )
 
 add_executable(ddb_invert src/util/invert.c)
 target_link_libraries(ddb_invert discodb )
+
+
+install(FILES ${HEADER_FILES} DESTINATION include)
+install(TARGETS discodb ddb_create ddb_query ddb_merge ddb_invert
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib/static)
 
 enable_testing()
 

@@ -17,12 +17,12 @@ The following examples demonstrate a prebuilt ddb obtained using
 
 
 
-Examples
-========
 
 Basic discodb wrapper for Lua.
 
 libdiscodb.so should be in :code:`LD_LIBRARY_PATH`
+
+
 
 Open and list keys
 ------------------
