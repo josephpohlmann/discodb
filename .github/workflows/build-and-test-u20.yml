@@ -36,7 +36,7 @@ jobs:
         run:
           rm -rf cmake-release;
           mkdir cmake-release && cd cmake-release;
-          cmake -DCMAKE_BUILD_TYPE=Release ..;
+          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release ..;
           make;
           make test;
           sudo make install;
