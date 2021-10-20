@@ -1,12 +1,13 @@
 #define PY_SSIZE_T_CLEAN
 
-#if PY_VERSION_HEX < 0x02060000
-#define PyVarObject_HEAD_INIT(type, size) PyObject_HEAD_INIT(type) size,
-#define Py_TYPE(ob)   (((PyObject*)(ob))->ob_type)
-#define PyBytes_AsString PyString_AsString
-#define PyBytes_FromFormat PyString_FromFormat
-#endif
+// #if PY_VERSION_HEX < 0x02060000
+// #define PyVarObject_HEAD_INIT(type, size) PyObject_HEAD_INIT(type) size,
+// #define Py_TYPE(ob)   (((PyObject*)(ob))->ob_type)
+// #define PyBytes_AsString PyString_AsString
+// #define PyBytes_FromFormat PyString_FromFormat
+// #endif
 
+#define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include "structmember.h"
 
@@ -393,7 +394,7 @@ DiscoDB_dumps(DiscoDB *self)
 {
     uint64_t length;
     char *cbuffer = ddb_dumps(self->discodb, &length);
-    PyObject *string = Py_BuildValue("s#", cbuffer, length);
+    PyObject *string = Py_BuildValue("y#", cbuffer, length);
     free(cbuffer);
     return string;
 }
@@ -433,7 +434,7 @@ DiscoDB_loads(PyTypeObject *type, PyObject *bytes)
     Py_ssize_t n;
 
     if (self != NULL) {
-        if (PyString_AsStringAndSize(bytes, (char**)&buffer, &n))
+        if (PyBytes_AsStringAndSize(bytes, (char**)&buffer, &n))
             goto Done;
 
         Py_INCREF(bytes);
@@ -503,31 +504,42 @@ DiscoDB_load(PyTypeObject *type, PyObject *args)
 
 /* Module Initialization */
 
-PyMODINIT_FUNC
-init_discodb(void)
+static struct PyModuleDef moduledef = {
+    PyModuleDef_HEAD_INIT,
+    "_discodb",
+    "Discodb Module",
+    -1,
+    discodb_methods,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+};
+
+PyMODINIT_FUNC PyInit__discodb(void)
 {
-    PyObject *module = Py_InitModule("_discodb", discodb_methods);
+    PyObject *module = PyModule_Create(&moduledef);
 
     if (PyType_Ready(&DiscoDBType) < 0)
-        return;
+        return (PyObject *)NULL;
     Py_INCREF(&DiscoDBType);
     PyModule_AddObject(module, "_DiscoDB",
                        (PyObject *)&DiscoDBType);
 
     if (PyType_Ready(&DiscoDBConstructorType) < 0)
-      return;
+        return (PyObject *)NULL;
     Py_INCREF(&DiscoDBConstructorType);
     PyModule_AddObject(module, "DiscoDBConstructor",
                        (PyObject *)&DiscoDBConstructorType);
 
     if (PyType_Ready(&DiscoDBIterType) < 0)
-      return;
+        return (PyObject *)NULL;
     Py_INCREF(&DiscoDBIterType);
     PyModule_AddObject(module, "DiscoDBIter",
                        (PyObject *)&DiscoDBIterType);
 
     if (PyType_Ready(&DiscoDBViewType) < 0)
-      return;
+        return (PyObject *)NULL;
     Py_INCREF(&DiscoDBViewType);
     PyModule_AddObject(module, "DiscoDBView",
                        (PyObject *)&DiscoDBViewType);
@@ -535,6 +547,7 @@ init_discodb(void)
     DiscoDBError = PyErr_NewException("discodb.DiscoDBError", NULL, NULL);
     Py_INCREF(DiscoDBError);
     PyModule_AddObject(module, "DiscoDBError", DiscoDBError);
+    return module;
 }
 
 
@@ -544,7 +557,7 @@ init_discodb(void)
 static PyMethodDef DiscoDBConstructor_methods[] = {
     {"add", (PyCFunction)DiscoDBConstructor_add, METH_VARARGS,
      "c.add(k, v) -> add (k, v) to the DiscoDB that will be produced."},
-    {"finalize", (PyCFunction)DiscoDBConstructor_finalize, METH_KEYWORDS,
+    {"finalize", (PyCFunction)DiscoDBConstructor_finalize, METH_VARARGS | METH_KEYWORDS,
      "c.finalize([flags]) -> a DiscoDB containing the mappings added to c."},
     {NULL}                                    /* Sentinel          */
 };
@@ -659,7 +672,7 @@ DiscoDBConstructor_add(DiscoDBConstructor *self, PyObject *item)
     uint64_t n;
     struct ddb_entry kentry, ventry;
 
-    if (!PyArg_ParseTuple(item, "s#O", &kentry.data, &kentry.length, &values))
+    if (!PyArg_ParseTuple(item, "y#O", &kentry.data, &kentry.length, &values))
       goto Done;
 
     Py_XINCREF(values);
@@ -667,7 +680,7 @@ DiscoDBConstructor_add(DiscoDBConstructor *self, PyObject *item)
     if (values == NULL)
       values = PyTuple_New(0);
 
-    if (PyString_Check(values))
+    if (PyBytes_Check(values))
       valueseq = Py_BuildValue("(O)", values);
     else
       Py_XINCREF(valueseq = values);
@@ -848,7 +861,7 @@ DiscoDBIter_iternext(DiscoDBIter *self)
     if (next == NULL)
         return NULL;
 
-    return Py_BuildValue("s#", next->data, next->length);
+    return Py_BuildValue("y#", next->data, next->length);
 }
 
 /* DiscoDB View Type */

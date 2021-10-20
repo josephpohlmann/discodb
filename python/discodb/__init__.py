@@ -59,10 +59,15 @@ class DiscoDB(_DiscoDB):
                              self.items().__format__('%s: %s.3'))
 
     def __getitem__(self, key):
+        if isinstance(key, str):
+            # For all DBs created by python2, everything will by bytes inside.
+            return DiscoDBInquiry(lambda: super(DiscoDB, self).__getitem__(key.encode()))
         return DiscoDBInquiry(lambda: super(DiscoDB, self).__getitem__(key))
 
     def get(self, key, default=None):
         """self[key] if key in self, else default."""
+        if isinstance(key, str) and key.encode() in self:
+            return self[key.encode()]
         if key in self:
             return self[key]
         return default
