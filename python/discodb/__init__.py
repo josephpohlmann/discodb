@@ -94,7 +94,9 @@ class DiscoDB(_DiscoDB):
 
         See :mod:`discodb.query` for more information.
         """
-        if isinstance(query, basestring):
+        if isinstance(query, bytes):
+            query = Q.parse(query.encode())
+        elif isinstance(query, str):
             query = Q.parse(query)
         return DiscoDBItemInquiry(lambda: query.metaquery(self))
 
@@ -105,7 +107,7 @@ class DiscoDB(_DiscoDB):
         The query can be either a :class:`Q` object, or a string.
         If a string, it is transformed into a :class:`Q` via :meth:`Q.parse`.
         """
-        if isinstance(query, basestring):
+        if isinstance(query, (str, bytes)):
             query = Q.parse(query)
         if view == None:
             l = lambda: super(DiscoDB, self).query(query)

@@ -1,3 +1,4 @@
+''''''
 """
 :mod:`discodb.query` -- Supporting objects for the DiscoDB query interface
 ==========================================================================
@@ -37,7 +38,12 @@ True
 >>> sorted((str(k), sorted(vs)) for k, vs in d.metaquery(Q.parse('**A | *B')))
 [('D', ['F']), ('E | D', ['F', 'G'])]
 """
+
 from operator import __and__, __or__
+from functools import reduce
+
+def cmp(a, b):
+    return (a > b) - (a < b)
 
 class Q(object):
     """
@@ -98,7 +104,7 @@ class Q(object):
         return reduce(__and__, (c.resolve(discodb) for c in self.clauses), Q([]))
 
     def urlformat(self, safe=':()/,~'):
-        from urllib import quote
+        from urllib.parse import quote
         return quote(str(self)
                      .replace('&', '/')
                      .replace('|', ',')
@@ -107,7 +113,7 @@ class Q(object):
 
     @classmethod
     def urlscan(cls, string):
-        from urllib import unquote
+        from urllib.parse import unquote
         return cls.parse(unquote(string)\
                          .strip().strip('/')\
                          .replace('/', '&')\
@@ -167,9 +173,14 @@ class Q(object):
         `[(Q.parse('B'), ['D']), (Q.parse('C'), [])]`.
         """
         import re
-        return eval(re.sub(r'([^&|~+()\s][^&|~+()]*)',
-                           r'Q.wrap("""\1""".strip())',
-                           string.replace('*', '+')) or 'Q([])')
+        if isinstance(string, str):
+            return eval(re.sub(r'([^&|~+()\s][^&|~+()]*)',
+                               r'Q.wrap("""\1""".strip())',
+                               string.replace('*', '+')) or 'Q([])')
+        else:
+            return eval(re.sub(rb'([^&|~+()\s][^&|~+()]*)',
+                               rb'Q.wrap("""\1""".strip())',
+                               string.replace(b'*', b'+')) or b'Q([])')
 
     @classmethod
     def wrap(cls, proposition):
